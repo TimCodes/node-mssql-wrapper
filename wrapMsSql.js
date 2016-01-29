@@ -60,24 +60,15 @@ exports.insertall = function(table, cols, vals){
 }
 
 exports.getColSum = function calcColSum(tableName, sumCol, groupCol) {
-    var sqlStr = "select " + groupCol + ", SUM(" + sumCol + " ) as sum from " + tableName + " group by " + groupCol;
-    console.log(sqlStr)
-    return  executeQueryStatment(sqlStr);  
+   return  executePreparedStatement(buildAggrgatePrepared(tableName, "SUM", sumCol, groupCol));  
 }
 
 exports.getColSumWhere = function calcColSumwhere(tableName, sumCol, groupCol, where) {
-     var sqlStr =  buildAggrgatePrepared(tableName, "SUM", sumCol, groupCol)
-     console.log("aggr query", sqlStr)
-      sqlStr = buildWherePrepared(sqlStr, where);
-      sqlStr.sql +=  " group by " + groupCol
-    console.log(sqlStr)
-    return  executePreparedStatement(sqlStr);  
+    return  executePreparedStatement(buildAggrgatePrepared(tableName, "SUM", sumCol, groupCol, where));  
 }
 
 exports.getColAvg = function calcColAvg(tableName, sumCol, groupCol) {
-    var sqlStr = "select " + groupCol + ", AVG(" + sumCol + " ) as average from " + tableName + " group by " + groupCol;
-    console.log(sqlStr)
-    return  executeQueryStatment(sqlStr);  
+     return  executePreparedStatement(buildAggrgatePrepared(tableName, "AVG", sumCol, groupCol));  
 }
 
 exports.getColMax= function calcColMax(tableName, sumCol, groupCol) {
@@ -196,9 +187,19 @@ function executeQueryStatment(query) {
 
 };
 
-function buildAggrgatePrepared(tableName, aggrType, sumCol, groupCol) {
-     var sqlStr = "select " + groupCol + "," + aggrType + "(" + sumCol + ") as " + aggrType + " from " + tableName;
-     return sqlStr
+function buildAggrgatePrepared(tableName, aggrType, sumCol, groupCol, where) {
+    var sqlStr = "select " + groupCol + "," + aggrType + "(" + sumCol + ") as " + aggrType + " from " + tableName;
+    var query = {};
+    if (where) {
+         query = buildWherePrepared(sqlStr, where);
+         query.sql +=  " group by " + groupCol
+    } else {
+        
+        sqlStr +=  " group by " + groupCol
+        query.sql = sqlStr;
+    }
+     
+     return query;
     
 }
 
